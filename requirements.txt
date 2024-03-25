@@ -1,6 +1,4 @@
 joblib
-python-dotenv
-werkzeug
 gunicorn
 click
 Flask
