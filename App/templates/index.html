@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RetentionRadar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/css/uikit.min.css" />
+    <style>
+        #drop-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #drop-area > #removeFile {
+            display: none ;
+            margin-top: 10px;
+        }
+
+        #drop-area label{
+            display: inline-block;
+            margin: 0 auto;
+        }
+        
+        #drop-area button {
+            display: block;
+            margin: 0 auto;
+        }
+
+        #fileElem{
+            text-align: right;
+        }
+
+        .uk-navbar-container, .uk-button-primary, .active {
+            background-color: #4D62CE !important;
+            color: white !important; 
+        }
+        #drop-area label {
+            background-color: #4D62CE !important;
+            color: white !important;
+            width: auto;
+        }
+
+        .uk-navbar-item{
+            color: white !important;
+        }
+
+        .uk-button {
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Horizontal offset, vertical offset, blur radius, color */
+        }
+    </style>
+
+    <style>
+        .spinner {
+            border: 16px solid #f3f3f3; /* Light grey */
+            border-top: 16px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            display: none; /* Hide it initially */
+        }
+    
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    
+</head>
+<body>
+    <nav class="uk-navbar-container" uk-navbar>
+        <div class="uk-navbar-left">
+            <a class="uk-navbar-item uk-logo" href="/">RetentionRadar</a>
+        </div>
+    </nav>
+    <div class="uk-container uk-text-center">
+        <div class="uk-margin-large-top uk-card uk-card-default uk-card-body uk-width-1-2@m uk-align-center">
+            <form id="file-form" action="/upload" method="post" enctype="multipart/form-data">
+                <div id="drop-area">
+                    <label class="uk-button uk-button-medium" for="fileElem">Upload File</label>
+                    <br>
+                    <input required type="file" id="fileElem" name="file" accept=".csv,.xlsx,.xls">
+                    <br>
+                    <button class="uk-button uk-button-default uk-button-small" type="button"  id="removeFile">Remove File</button>
+                    <p id="file-name"></p>
+                    <img id="file-preview" src="" alt="" style="display: none;">
+                </div>
+                <button class="uk-button uk-button-primary uk-margin-small-top uk-button-medium" type="submit">Submit</button>
+            </form>
+        </div>
+        
+        <div class="uk-child-width-1-1 uk-child-width-1-2@s uk-child-width-1-4@m uk-text-center" uk-grid>
+            <div>
+                <form class="model-form" action="/run-model" method="post">
+                    <input type="hidden" name="model" value="all">
+                    <button type="submit" class="uk-button model-run uk-button-default active">Run All</button>
+                </form>
+            </div>
+            <div>
+                <form class="model-form" action="/run-model" method="post">
+                    <input type="hidden" name="model" value="tenure">
+                    <button type="submit" class="uk-button model-run uk-button-default">Run Tenure Estimation</button>
+                </form>
+            </div>
+            <div>
+                <form class="model-form" action="/run-model" method="post">
+                    <input type="hidden" name="model" value="clustering">
+                    <button type="submit" class="uk-button model-run uk-button-default">Run Employee Clustering</button>
+                </form>
+            </div>
+            <div>
+                <form class="model-form" action="/run-model" method="post">
+                    <input type="hidden" name="model" value="anomaly">
+                    <button type="submit" class="uk-button model-run uk-button-default">Run Anomaly Detection</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="spinner" class="spinner"></div>
+        
+    </div>
+    <script>
+            document.querySelector('.model-form').addEventListener('submit', function() {
+                document.getElementById('spinner').style.display = 'inline-block'; // Show the spinner
+            });
+            </script>
+            
+        </script>
+        
+    <script>
+        var fileElem = document.getElementById('fileElem');
+        var removeFileButton = document.getElementById('removeFile');
+
+        // Add an event listener to the file input
+        fileElem.addEventListener('change', function() {
+            // If a file is selected, show the "Remove File" button
+            if (fileElem.value) {
+                removeFileButton.style.display = 'inline-block';
+            } else {
+                removeFileButton.style.display = 'none';
+            }
+        });
+
+        // Add an event listener to the "Remove File" button
+        removeFileButton.addEventListener('click', function() {
+            // Clear the file input
+            fileElem.value = '';
+            // Hide the "Remove File" button
+            removeFileButton.style.display = 'none';
+            // Clear the file name and preview
+            document.getElementById('file-name').textContent = '';
+            document.getElementById('file-preview').src = '';
+            document.getElementById('file-preview').style.display = 'none';
+        });
+
+        // Add event listeners to the buttons to change the active button
+        var buttons = document.querySelectorAll('.model-run');
+
+        buttons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                // Remove the active class from all buttons
+                buttons.forEach(function(btn) {
+                    btn.classList.remove('active');
+                });
+                // Add the active class to the clicked button
+                this.classList.add('active');
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit-icons.min.js"></script>
+</body>
+</html>
