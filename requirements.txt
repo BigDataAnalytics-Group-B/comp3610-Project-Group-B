@@ -1,3 +1,4 @@
 joblib
 python-dotenv
 werkzeug
+gunicorn
