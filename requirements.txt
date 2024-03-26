@@ -14,8 +14,9 @@ Flask-Reuploaded
 psycopg2-binary
 pytest
 Flask-JWT-Extended
-pyrebase4
 Werkzeug
 gevent
 mysqlclient
 pandas
+openpyxl
+tensorflow
