@@ -117,8 +117,40 @@
         </div>
 
         <div id="spinner" class="spinner"></div>
-        
+
+       <!-- Results Display -->
+    <div class="uk-container">
+        {% if results %}
+            <div class="uk-overflow-auto">
+                <table class="uk-table uk-table-hover uk-table-middle uk-table-divider">
+                    <thead>
+                        <tr>
+                            <th class="uk-table-shrink">Years</th>
+                            <th class="uk-table-shrink">Months</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for (years, months) in (results) %}
+                            <tr>
+                                <td>{{ years }} years</td>
+                                <td>{{ months }} months</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination or dynamic loading mechanism can be implemented here. -->
+        {% else %}
+            <!-- Optionally, display a message when there are no results. -->
+            <div>No results to display.</div>
+        {% endif %}
     </div>
+                    
+    </div>
+
+
+
+
     <script>
             document.querySelector('.model-form').addEventListener('submit', function() {
                 document.getElementById('spinner').style.display = 'inline-block'; // Show the spinner
@@ -166,6 +198,7 @@
                 this.classList.add('active');
             });
         });
+
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit-icons.min.js"></script>
