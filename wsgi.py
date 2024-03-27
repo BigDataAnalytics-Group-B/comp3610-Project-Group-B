@@ -3,6 +3,7 @@ from werkzeug.utils import secure_filename
 import os
 from App.database import get_migrate
 from App.main import create_app
+from App.Controllers.controllers import get_employee_tenure_predictions
 
 app = create_app()
 migrate = get_migrate(app)
@@ -16,7 +17,7 @@ def page_not_found(error):
 def home():
     return render_template("index.html") 
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['POST')]
 def upload_file():
     if 'file' not in request.files:
         return 'No file part'
@@ -26,17 +27,18 @@ def upload_file():
     if not file.filename.endswith('.csv'):
         return 'Invalid file type'
     filename = secure_filename(file.filename)
-    file.save(os.path.join(app.config['UPLOADS'], filename))
+    file.save(os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename))
     return 'File uploaded successfully'
 
 import time
 @app.route('/run-model', methods=['POST'])
 def run_model():
-    time.sleep(10)
     model = request.form['model']
     if model == 'all':
         pass
     elif model == 'tenure':
+        results = get_employee_tenure_predictions()
+        return results
         pass
     elif model == 'clustering':
         pass
