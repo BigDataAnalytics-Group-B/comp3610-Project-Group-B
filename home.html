@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RetentionRadar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.6.16/css/uikit.min.css" />
+    <style>
+        .uk-header {
+            background-color: #3E5B99;
+            color: white;
+        }
+        .uk-card {
+            border: 2px dashed #aaa;
+            text-align: center;
+            padding: 30px 0;
+        }
+        .button-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="uk-header uk-padding uk-light">
+        <h1>RetentionRadar</h1>
+    </div>
+
+    <div class="uk-container">
+        <div class="uk-margin-medium-top uk-card uk-card-default uk-card-body">
+            <p class="uk-text">Upload File</p>
+            <div uk-form-custom>
+                <input type="file">
+                <span class="uk-link">or drop a file,</span>
+            </div>
+        </div>
+
+        <div class="button-section">
+            <button class="uk-button uk-button-primary">Run All</button>
+            <button class="uk-button uk-button-primary">Run Tenure Estimation</button>
+            <button class="uk-button uk-button-primary">Run Employee Clustering</button>
+            <button class="uk-button uk-button-primary">Run Anomaly Detection</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.6.16/js/uikit.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.6.16/js/uikit-icons.min.js"></script>
+</body>
+</html>
