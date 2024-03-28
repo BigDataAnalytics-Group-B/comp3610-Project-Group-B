@@ -24,8 +24,8 @@ def upload_file():
     file = request.files['file']
     if file.filename == '':
         return 'No selected file'
-    if not file.filename.endswith('.csv'):
-        return 'Invalid file type'
+    # if not file.filename.endswith('.csv'):
+    #     return 'Invalid file type'
     filename = secure_filename(file.filename)
     file.save(os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename))
     return 'File uploaded successfully'
