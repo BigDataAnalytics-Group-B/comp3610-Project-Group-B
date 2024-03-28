@@ -17,7 +17,7 @@ def page_not_found(error):
 def home():
     return render_template("index.html") 
 
-@app.route('/upload', methods=['POST')]
+@app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
         return 'No file part'
@@ -38,7 +38,7 @@ def run_model():
         pass
     elif model == 'tenure':
         results = get_employee_tenure_predictions()
-        return results
+        return render_template('index.html', results=results)
         pass
     elif model == 'clustering':
         pass
