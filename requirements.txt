@@ -20,3 +20,4 @@ mysqlclient
 pandas
 openpyxl
 scikit-learn == 1.3.0
+seaborn
