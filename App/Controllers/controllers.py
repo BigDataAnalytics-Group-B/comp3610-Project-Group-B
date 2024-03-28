@@ -18,7 +18,7 @@ def get_employee_tenure_predictions():
 
     loaded_model = load('App/Controllers/best_model.joblib')
     
-    df = pd.read_excel('App\\uploads\\HR_Employee_Data.xlsx')
+    df = pd.read_excel('App/uploads/HR_Employee_Data.xlsx')
     
     clean_df = df[['satisfaction_level', 'number_project']]
     
