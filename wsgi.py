@@ -1,4 +1,4 @@
-from flask import render_template,request, jsonify
+from flask import render_template,request, jsonify, redirect, flash
 from werkzeug.utils import secure_filename
 import os
 from App.database import get_migrate
@@ -28,7 +28,8 @@ def upload_file():
     #     return 'Invalid file type'
     filename = secure_filename(file.filename)
     file.save(os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename))
-    return 'File uploaded successfully'
+    flash( 'File uploaded successfully')
+    return redirect(request.referrer)
 
 import time
 @app.route('/run-model', methods=['POST'])
