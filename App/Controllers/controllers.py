@@ -16,7 +16,7 @@ def convert_to_years_months(total_years):
 
 def get_employee_tenure_predictions():
 
-    loaded_model = load('App\\Controllers\\best_model.joblib')
+    loaded_model = load('App/Controllers/best_model.joblib')
     
     df = pd.read_excel('App\\uploads\\HR_Employee_Data.xlsx')
     
