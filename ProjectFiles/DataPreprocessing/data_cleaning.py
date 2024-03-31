@@ -9,4 +9,5 @@ def one_hot_encode(df):
 
     return df
 
-
+def percentConverterCSV(x):
+        return float(x.strip('%'))/100
