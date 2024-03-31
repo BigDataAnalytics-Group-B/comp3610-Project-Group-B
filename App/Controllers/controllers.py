@@ -30,7 +30,7 @@ def load_data(filename):
     return read_function(filename)
 
 def get_employee_tenure_predictions():
-    loaded_model = load('App/Controllers/best_model.joblib')
+    loaded_model = load('ProjectFiles/Models/best_model.joblib')
     filename = 'App/uploads/' + session.get('filename')
     df = load_data(filename)
     clean_df = df[['satisfaction_level', 'number_project']]
