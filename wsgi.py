@@ -47,7 +47,6 @@ def upload_file():
 
     # Remember the filename for next time
     session['filename'] = filename
-    print(filename, " ", "jiji")
     return 'File uploaded successfully'
 
 @app.route('/delete-file', methods=['POST','GET'])
