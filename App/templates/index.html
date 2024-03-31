@@ -114,6 +114,10 @@
 
         <div id="spinner" class="spinner"></div>
 
+        {% if download %}
+            <br>
+            <a href="/download" class="uk-button">Download Results</a>
+        {% endif %}
        <!-- Results Display -->
     <div class="uk-container">
         {% if results %}
@@ -140,6 +144,7 @@
             <!-- Optionally, display a message when there are no results. -->
             <div>No results to display.</div>
         {% endif %}
+
     </div>
                     
     </div>
