@@ -6,6 +6,9 @@ from App.main import create_app
 from App.Controllers.controllers import get_employee_tenure_predictions
 
 app = create_app()
+
+from flask_dropzone import Dropzone
+dropzone = Dropzone(app)
 migrate = get_migrate(app)
 
 
@@ -17,32 +20,65 @@ def page_not_found(error):
 def home():
     return render_template("index.html") 
 
+# @app.route('/upload', methods=['POST'])
+# def upload_file():
+#     if 'file' not in request.files:
+#         return 'No file part'
+#     file = request.files['file']
+#     if file.filename == '':
+#         return 'No selected file'
+#     # if not file.filename.endswith('.csv'):
+#     #     return 'Invalid file type'
+#     filename = secure_filename(file.filename)
+#     file.save(os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename))
+#     return 'File uploaded successfully'
+from flask import Flask, request, session
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    delete_file()
     if 'file' not in request.files:
         return 'No file part'
     file = request.files['file']
     if file.filename == '':
         return 'No selected file'
-    if not file.filename.endswith('.csv'):
-        return 'Invalid file type'
     filename = secure_filename(file.filename)
     file.save(os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename))
+
+    # Remember the filename for next time
+    session['filename'] = filename
+    print(filename, " ", "jiji")
     return 'File uploaded successfully'
+
+@app.route('/delete-file', methods=['POST','GET'])
+def delete_file():
+    filename = session.get('filename')
+    if filename:
+        try:
+            os.remove(os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename))
+            session.pop('filename', None)  # Remove the filename from the session
+        except FileNotFoundError:
+            pass  # File does not exist
+    return 'File deleted'
+
 
 import time
 @app.route('/run-model', methods=['POST'])
 def run_model():
-    model = request.form['model']
-    if model == 'all':
-        pass
-    elif model == 'tenure':
-        results = get_employee_tenure_predictions()
-        return render_template('index.html', results=results)
-        pass
-    elif model == 'clustering':
-        pass
-    elif model == 'anomaly':
-        pass
-    return "model here"
+    try:
+        model = request.form['model']
+        print(session)
+        if model == 'all':
+            pass
+        elif model == 'tenure':
+            results = get_employee_tenure_predictions()
+            return render_template('index.html', results=results)
+        elif model == 'clustering':
+            pass
+        elif model == 'anomaly':
+            pass
+        return "model here"
+    except Exception as e:
+        print(e)
+        return render_template('index.html', error_message=str(e))
+
 
