@@ -4,6 +4,7 @@ import os
 from App.database import get_migrate
 from App.main import create_app
 from App.Controllers.controllers import get_employee_tenure_predictions
+import csv
 
 app = create_app()
 
@@ -71,7 +72,10 @@ def run_model():
             pass
         elif model == 'tenure':
             results = get_employee_tenure_predictions()
-            return render_template('index.html', results=results)
+            with open("App\\results.csv", 'w', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerows(results)
+            return render_template('index.html', results=results, download=True)
         elif model == 'clustering':
             pass
         elif model == 'anomaly':
@@ -81,4 +85,8 @@ def run_model():
         print(e)
         return render_template('index.html', error_message=str(e))
 
+from flask import send_file
 
+@app.route('/download')
+def download_file():
+    return send_file('results.csv', as_attachment=True)
