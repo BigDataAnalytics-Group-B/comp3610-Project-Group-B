@@ -33,8 +33,20 @@ def get_employee_tenure_predictions():
     loaded_model = load('ProjectFiles/Models/best_model.joblib')
     filename = 'App/uploads/' + session.get('filename')
     df = load_data(filename)
+    
+    # Save the 'Emp_Id' column
+    emp_ids = df['Emp_Id']
+    
     clean_df = df[['satisfaction_level', 'number_project']]
     new_predictions = loaded_model.predict(clean_df)
+    
+    # Convert predictions to years and months
     predictions_in_years_months = [convert_to_years_months(pred) for pred in new_predictions]
-    return predictions_in_years_months
+    
+    # Combine 'Emp_Id' and predictions into a list of lists
+    results = [[emp_id] + list(prediction) for emp_id, prediction in zip(emp_ids, predictions_in_years_months)]
+    
+    return results
+
+
 
