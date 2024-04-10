@@ -125,13 +125,15 @@
                 <table class="uk-table uk-table-hover uk-table-middle uk-table-divider">
                     <thead>
                         <tr>
+                            <th style="text-align:center;">Employee ID</th>
                             <th style="text-align: center">Years</th>
                             <th style="text-align: center">Months</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for (years, months) in (results) %}
+                        {% for (id, years, months) in (results) %}
                             <tr>
+                                <td>{{id}}</td>
                                 <td>{{ years }} years</td>
                                 <td>{{ months }} months</td>
                             </tr>

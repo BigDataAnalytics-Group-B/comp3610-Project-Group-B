@@ -70,10 +70,13 @@ def run_model():
         if model == 'all':
             pass
         elif model == 'tenure':
-            results = get_employee_tenure_predictions()
-            with open("App\\results.csv", 'w', newline='') as csvfile:
-                writer = csv.writer(csvfile)
-                writer.writerows(results)
+            try:
+                results = get_employee_tenure_predictions()
+                with open("App\\results.csv", 'w', newline='') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerows(results)
+            except Exception as E:
+                print(E)
             return render_template('index.html', results=results, download=True)
         elif model == 'clustering':
             pass
