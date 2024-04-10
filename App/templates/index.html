@@ -1,43 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+    {{ dropzone.load_css() }}
+    {{ dropzone.load_js() }}
+    {{ dropzone.config() }}
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RetentionRadar</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/css/uikit.min.css" />
     <style>
-        #drop-area {
-            border: 2px dashed #ccc;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        #drop-area > #removeFile {
-            display: none ;
-            margin-top: 10px;
-        }
-
-        #drop-area label{
-            display: inline-block;
-            margin: 0 auto;
-        }
-        
-        #drop-area button {
-            display: block;
-            margin: 0 auto;
-        }
-
-        #fileElem{
-            text-align: right;
-        }
 
         .uk-navbar-container, .uk-button-primary, .active {
             background-color: #4D62CE !important;
             color: white !important; 
-        }
-        #drop-area label {
-            background-color: #4D62CE !important;
-            color: white !important;
-            width: auto;
         }
 
         .uk-navbar-item{
@@ -47,6 +21,39 @@
         .uk-button {
             box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); /* Horizontal offset, vertical offset, blur radius, color */
         }
+
+        .dropzone {
+            border: 2px dashed #808080;
+            background: white;
+            border-radius: 5px;
+            min-height: 150px;
+            padding: 30px;
+            width: 100%;
+        }
+        
+        .dz-message {
+            text-align: center;
+            font-size: 28px;
+        }
+        
+        .dz-preview {
+            display: inline-block;
+            margin: 10px;
+        }
+
+        #a {
+            border: none; /* Remove borders */
+            color: black; /* White text */ 
+            text-align: center; /* Centered text */
+            text-decoration: none; /* Remove underline */
+            display: block;
+            font-size: 16px;
+            cursor: pointer; /* Mouse pointer on hover */
+            margin: auto;
+            margin-top: 5%;
+        }
+        
+        
     </style>
 
     <style>
@@ -74,19 +81,8 @@
         </div>
     </nav>
     <div class="uk-container uk-text-center">
-        <div class="uk-margin-large-top uk-card uk-card-default uk-card-body uk-width-1-2@m uk-align-center">
-            <form id="file-form" action="/upload" method="post" enctype="multipart/form-data">
-                <div id="drop-area">
-                    <label class="uk-button uk-button-medium" for="fileElem">Upload File</label>
-                    <br>
-                    <input required type="file" id="fileElem" name="file" accept=".csv,.xlsx,.xls">
-                    <br>
-                    <button class="uk-button uk-button-default uk-button-small" type="button"  id="removeFile">Remove File</button>
-                    <p id="file-name"></p>
-                    <img id="file-preview" src="" alt="" style="display: none;">
-                </div>
-                <button class="uk-button uk-button-primary uk-margin-small-top uk-button-medium" type="submit">Submit</button>
-            </form>
+        <div class="uk-margin-large-top uk-card uk-card-default uk-card-body uk-width-1-1@m uk-align-center">
+            {{ dropzone.create(action='/upload') }}           
         </div>
         
         <div class="uk-child-width-1-1 uk-child-width-1-2@s uk-child-width-1-4@m uk-text-center" uk-grid>
@@ -118,6 +114,10 @@
 
         <div id="spinner" class="spinner"></div>
 
+        {% if download %}
+            <br>
+            <a href="/download" class="uk-button">Download Results</a>
+        {% endif %}
        <!-- Results Display -->
     <div class="uk-container">
         {% if results %}
@@ -125,8 +125,8 @@
                 <table class="uk-table uk-table-hover uk-table-middle uk-table-divider">
                     <thead>
                         <tr>
-                            <th class="uk-table-shrink">Years</th>
-                            <th class="uk-table-shrink">Months</th>
+                            <th style="text-align: center">Years</th>
+                            <th style="text-align: center">Months</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -144,50 +144,84 @@
             <!-- Optionally, display a message when there are no results. -->
             <div>No results to display.</div>
         {% endif %}
+
     </div>
                     
     </div>
 
-
-
-
     <script>
-            document.querySelector('.model-form').addEventListener('submit', function() {
-                document.getElementById('spinner').style.display = 'inline-block'; // Show the spinner
-            });
-            </script>
-            
-        </script>
+
+        // Variable to hold the Dropzone instance
+        var myDropzone;
+    
+        // Initialize Dropzone
+        Dropzone.options.myDropzone = {
+            dictDefaultMessage: "Drop files here to upload",
+            acceptedFiles: '.csv,.xlsx,.xls',
+            maxFiles: 1,
+            init: function() {
+                // Assign this Dropzone instance to the variable
+                myDropzone = this;
+    
+                this.on("addedfile", function(file) {
+                    if (this.files[1]!=null){
+                        this.removeFile(this.files[0]);
+                    }
         
-    <script>
-        var fileElem = document.getElementById('fileElem');
-        var removeFileButton = document.getElementById('removeFile');
-
-        // Add an event listener to the file input
-        fileElem.addEventListener('change', function() {
-            // If a file is selected, show the "Remove File" button
-            if (fileElem.value) {
-                removeFileButton.style.display = 'inline-block';
-            } else {
-                removeFileButton.style.display = 'none';
+                    // Create the remove button
+                    var bre = Dropzone.createElement("<br>");
+                    var removeButton = Dropzone.createElement("<button id=\"a\">Remove file</button>");
+                
+                    // Capture the Dropzone instance as closure
+                    var _this = this;
+        
+                    removeButton.addEventListener("click", function(e) {
+                      e.preventDefault();
+                      e.stopPropagation();
+    
+                      fetch('/delete-file', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({filename: file.name}),
+                    })
+                    .then(response => response.text())
+                    .then(data => {
+                        console.log(data);
+                    });
+        
+                      // Remove the file preview
+                      _this.removeFile(file);
+                    });
+        
+                    // Add the button to the file preview element.
+                    file.previewElement.appendChild(removeButton);
+                });
             }
+        };
+        
+    </script>
+    
+    <script>
+        // Add event listeners to the model-form buttons
+        document.querySelectorAll('.model-form').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                // Check if a file has been added to the Dropzone
+                if (myDropzone && myDropzone.files.length === 0) {
+                    e.preventDefault(); // Prevent form submission
+                    alert('Upload file first'); // Show alert to the user
+                } else {
+                    document.getElementById('spinner').style.display = 'inline-block'; // Show the spinner
+                }
+            });
         });
-
-        // Add an event listener to the "Remove File" button
-        removeFileButton.addEventListener('click', function() {
-            // Clear the file input
-            fileElem.value = '';
-            // Hide the "Remove File" button
-            removeFileButton.style.display = 'none';
-            // Clear the file name and preview
-            document.getElementById('file-name').textContent = '';
-            document.getElementById('file-preview').src = '';
-            document.getElementById('file-preview').style.display = 'none';
-        });
-
+    </script>
+    
+    <script>
         // Add event listeners to the buttons to change the active button
         var buttons = document.querySelectorAll('.model-run');
-
+    
         buttons.forEach(function(button) {
             button.addEventListener('click', function() {
                 // Remove the active class from all buttons
@@ -198,8 +232,8 @@
                 this.classList.add('active');
             });
         });
-
     </script>
+        
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit-icons.min.js"></script>
 </body>
