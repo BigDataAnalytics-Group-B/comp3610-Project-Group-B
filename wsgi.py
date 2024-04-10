@@ -88,7 +88,22 @@ def run_model():
         return render_template('index.html', error_message=str(e))
 
 from flask import send_file
+import pandas as pd
+from tempfile import NamedTemporaryFile
 
 @app.route('/download')
 def download_file():
-    return send_file('results.csv', as_attachment=True)
+    # Read the CSV file into a pandas DataFrame
+    df = pd.read_csv('App\\results.csv')
+
+    # Use a temporary file to avoid file management issues
+    with NamedTemporaryFile(delete=False, suffix='.xlsx', mode='w+b') as tmp:
+        # Convert the DataFrame to an XLSX file and save it
+        df.to_excel(tmp.name, index=False)
+
+        # Prepare the response, sending the temporary file as an attachment
+        response = send_file(tmp.name, as_attachment=True)
+        # Specify the desired download name in the Content-Disposition header
+        response.headers["Content-Disposition"] = "attachment; filename=results.xlsx"
+        
+        return response

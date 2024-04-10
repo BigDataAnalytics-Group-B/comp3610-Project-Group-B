@@ -119,10 +119,10 @@
             <a href="/download" class="uk-button">Download Results</a>
         {% endif %}
        <!-- Results Display -->
-    <div class="uk-container">
+       <div class="uk-container">
         {% if results %}
             <div class="uk-overflow-auto">
-                <table class="uk-table uk-table-hover uk-table-middle uk-table-divider">
+                <table id="yourTableId" class="uk-table uk-table-hover uk-table-middle uk-table-divider">
                     <thead>
                         <tr>
                             <th style="text-align:center;">Employee ID</th>
@@ -141,13 +141,13 @@
                     </tbody>
                 </table>
             </div>
-            <!-- Pagination or dynamic loading mechanism can be implemented here. -->
+            <!-- Pagination Controls Placeholder -->
+            <div id="paginationContainer" class="uk-margin"></div>
         {% else %}
-            <!-- Optionally, display a message when there are no results. -->
             <div>No results to display.</div>
         {% endif %}
-
     </div>
+    
                     
     </div>
 
@@ -235,6 +235,101 @@
             });
         });
     </script>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.querySelector('#yourTableId');
+            if (table) {
+                setupPagination();
+            } else {
+                console.error('Table with ID #yourTableId not found.');
+            }
+        });
+
+        const itemsPerPage = 10;
+        
+        function setupPagination() {
+            // Adjust this value as per your needs
+            const table = document.querySelector('#yourTableId');
+            const tableRows = table.querySelectorAll('tbody tr');
+            const totalPages = Math.ceil(tableRows.length / itemsPerPage);
+        
+            // Initially display the first page
+            displayPage(1, itemsPerPage, totalPages);
+        }
+        
+        function createPaginationControls(totalPages, currentPage) {
+            const paginationContainer = document.querySelector('#paginationContainer');
+            paginationContainer.innerHTML = ''; // Clear existing controls
+        
+            const maxPageNumbersToShow = 5; // Maximum number of page numbers to show at once
+            let startPage = Math.max(currentPage - Math.floor(maxPageNumbersToShow / 2), 1);
+            let endPage = startPage + maxPageNumbersToShow - 1;
+        
+            if (endPage > totalPages) {
+                endPage = totalPages;
+                startPage = Math.max(totalPages - maxPageNumbersToShow + 1, 1);
+            }
+        
+            const ul = document.createElement('ul');
+            ul.className = 'uk-pagination uk-flex-center';
+        
+            const prevLi = document.createElement('li');
+            prevLi.className = currentPage === 1 ? 'uk-disabled' : '';
+            const prevLink = document.createElement('a');
+            prevLink.href = '#';
+            prevLink.innerHTML = '&laquo;'; // or use 'Previous'
+            prevLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (currentPage > 1) displayPage(currentPage - 1, itemsPerPage, totalPages);
+            });
+            prevLi.appendChild(prevLink);
+            ul.appendChild(prevLi);
+        
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = currentPage === i ? 'uk-active' : '';
+                const a = document.createElement('a');
+                a.href = '#';
+                a.textContent = i;
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    displayPage(i, itemsPerPage, totalPages);
+                });
+                li.appendChild(a);
+                ul.appendChild(li);
+            }
+        
+            const nextLi = document.createElement('li');
+            nextLi.className = currentPage === totalPages ? 'uk-disabled' : '';
+            const nextLink = document.createElement('a');
+            nextLink.href = '#';
+            nextLink.innerHTML = '&raquo;'; // or use 'Next'
+            nextLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (currentPage < totalPages) displayPage(currentPage + 1, itemsPerPage, totalPages);
+            });
+            nextLi.appendChild(nextLink);
+            ul.appendChild(nextLi);
+        
+            paginationContainer.appendChild(ul);
+        }
+        
+        function displayPage(pageNumber, itemsPerPage, totalPages) {
+            const table = document.querySelector('#yourTableId');
+            const tableRows = table.querySelectorAll('tbody tr');
+            const start = (pageNumber - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+        
+            tableRows.forEach(row => row.style.display = 'none');
+            for (let i = start; i < end && i < tableRows.length; i++) {
+                tableRows[i].style.display = '';
+            }
+        
+            createPaginationControls(totalPages, pageNumber);
+        }
+        </script>
         
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit-icons.min.js"></script>
