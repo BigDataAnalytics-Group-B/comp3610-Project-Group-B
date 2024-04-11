@@ -98,7 +98,7 @@ def get_employee_anomalies():
 
 
 def get_employee_clusters():
-    merged_df = pd.DataFrame(pd.read_csv("ProjectFiles\\Dataset\\clustering-data.csv"))
+    merged_df = pd.DataFrame(pd.read_csv("ProjectFiles/Dataset/clustering-data.csv"))
     # Define scales for each feature separately
     project_scales = define_scale(merged_df, 'number_project')
     satisfaction_scales = define_scale(merged_df, 'satisfaction_level', 0, 1)
