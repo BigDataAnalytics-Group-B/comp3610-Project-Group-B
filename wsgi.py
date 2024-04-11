@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 import os
 from App.database import get_migrate
 from App.main import create_app
-from App.Controllers.controllers import get_employee_tenure_predictions
+from App.Controllers.controllers import get_employee_tenure_predictions, get_employee_anomalies
 import csv
 
 app = create_app()
@@ -81,6 +81,20 @@ def run_model():
         elif model == 'clustering':
             pass
         elif model == 'anomaly':
+            try:
+                resultsA = get_employee_anomalies()
+     
+                with open("App\\resultsAnomaly.csv", 'w', newline='') as csvfile:
+                    fieldnames = ['Emp_Id', 'average_monthly_hours']  # Define field names
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+                    writer.writeheader()  # Write the header row based on fieldnames
+                    for result in resultsA:
+                        writer.writerow(result)  # Write each dictionary row
+                   
+            except Exception as E:
+                print(E)
+            return render_template('index.html', resultsA=resultsA, download=True)
             pass
         return "model here"
     except Exception as e:
@@ -105,5 +119,22 @@ def download_file():
         response = send_file(tmp.name, as_attachment=True)
         # Specify the desired download name in the Content-Disposition header
         response.headers["Content-Disposition"] = "attachment; filename=results.xlsx"
+        
+        return response
+    
+@app.route('/downloadAnomaly')
+def download_file_A():
+    # Read the CSV file into a pandas DataFrame
+    df = pd.read_csv('App\\resultsAnomaly.csv')
+
+    # Use a temporary file to avoid file management issues
+    with NamedTemporaryFile(delete=False, suffix='.xlsx', mode='w+b') as tmp:
+        # Convert the DataFrame to an XLSX file and save it
+        df.to_excel(tmp.name, index=False)
+
+        # Prepare the response, sending the temporary file as an attachment
+        response = send_file(tmp.name, as_attachment=True)
+        # Specify the desired download name in the Content-Disposition header
+        response.headers["Content-Disposition"] = "attachment; filename=resultsAnomaly.xlsx"
         
         return response
