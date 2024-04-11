@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 import os
 from App.database import get_migrate
 from App.main import create_app
-from App.Controllers.controllers import get_employee_tenure_predictions, get_employee_anomalies
+from App.Controllers.controllers import get_employee_tenure_predictions, get_employee_clusters, get_employee_anomalies
 import csv
 
 app = create_app()
@@ -67,6 +67,7 @@ def run_model():
     try:
         model = request.form['model']
         print(session)
+        print("model is " + model)
         if model == 'all':
             pass
         elif model == 'tenure':
@@ -79,7 +80,8 @@ def run_model():
                 print(E)
             return render_template('index.html', results=results, download=True)
         elif model == 'clustering':
-            pass
+            insights = get_employee_clusters()
+            return render_template('index.html', insights=insights, download=True)
         elif model == 'anomaly':
             try:
                 resultsA = get_employee_anomalies()

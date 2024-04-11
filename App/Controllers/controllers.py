@@ -97,3 +97,117 @@ def get_employee_anomalies():
 
 
 
+def get_employee_clusters():
+    merged_df = pd.DataFrame(pd.read_csv("ProjectFiles\\Dataset\\clustering-data.csv"))
+    # Define scales for each feature separately
+    project_scales = define_scale(merged_df, 'number_project')
+    satisfaction_scales = define_scale(merged_df, 'satisfaction_level', 0, 1)
+    hours_scales = define_scale(merged_df, 'average_monthly_hours')
+    evaluation_scales = define_scale(merged_df, 'last_evaluation', 0, 1)
+
+    # Combine all scales into a single dictionary
+    scales = {
+        'number_project': project_scales,
+        'satisfaction_level': satisfaction_scales,
+        'average_monthly_hours': hours_scales,
+        'last_evaluation': evaluation_scales
+    }
+
+    print(scales)
+
+    cluster_means = cluster_analysis(merged_df, 'cluster', ['satisfaction_level', 'last_evaluation', 'number_project', 'average_monthly_hours', 'left'])
+
+    print(cluster_means)
+
+    # Generate insights
+    insights = generate_insights(cluster_means, scales)
+    print("Insights:", insights)
+
+    return insights
+
+
+
+def define_scale(data, feature, lower_bound=None, upper_bound=None):
+    # If bounds are not provided, calculate quartiles for the feature
+    if lower_bound is None:
+        lower_bound = data[feature].min()
+    if upper_bound is None:
+        upper_bound = data[feature].max()
+
+    # Define scale labels
+    scales = {}
+
+    # Define value ranges for each scale label
+    scale_range = (upper_bound - lower_bound) / 3
+    scales['Low'] = (round(lower_bound, 2), round(lower_bound + scale_range, 2))
+    scales['Moderate'] = (round(lower_bound + scale_range, 2), round(lower_bound + 2 * scale_range, 2))
+    scales['High'] = (round(lower_bound + 2 * scale_range, 2), round(upper_bound, 2))
+
+    return scales
+
+
+
+def cluster_analysis(data, cluster_column, feature_columns):
+    # Group the data by cluster and calculate the mean values of features
+    cluster_means = data.groupby(cluster_column)[feature_columns].mean()
+
+    return cluster_means
+
+
+
+def generate_insights(cluster_means, scales):
+    insights = {}
+
+    # Iterate over each cluster
+    for cluster, means in cluster_means.iterrows():
+        cluster_insights = {}
+        
+        # Compare mean feature values to defined scales for each feature
+        for feature, value in means.items():
+            # Skip if the feature is not in the scales dictionary
+            if feature not in scales:
+                continue
+            
+            # Determine the scale label for the feature value
+            for scale_label, scale_range in scales[feature].items():
+                if scale_range[0] <= value <= scale_range[1]:
+                    cluster_insights[feature] = scale_label
+                    break
+        
+        insights[cluster] = cluster_insights
+
+    return insights
+
+
+def temp(df, df_subset):
+    # Reset index of cluster_df to make the index a regular column
+    test_df = df_subset
+    # test_df.reset_index(inplace=True)
+
+    keep_features = ['satisfaction_level', 'last_evaluation', 'number_project',
+        'average_montly_hours', 'left']
+
+    df_selected_left = df[keep_features]
+    # print(df_selected_left.head())
+
+    # Merge cluster_df with original_dataset using the index as the joining key
+    merged_df = df_selected_left.merge(test_df, left_index=True, right_index=True)
+
+    # Display merged DataFrame with cluster information and "left" column
+    merged_df
+
+    # Select only the specified columns
+    merged_df = merged_df[['satisfaction_level_x', 'last_evaluation_x', 'number_project_x',
+                        'average_montly_hours_x', 'left', 'cluster']]
+
+    # Rename the columns for clarity
+    merged_df.rename(columns={
+        'satisfaction_level_x': 'satisfaction_level',
+        'last_evaluation_x': 'last_evaluation',
+        'number_project_x': 'number_project',
+        'average_montly_hours_x': 'average_monthly_hours'
+    }, inplace=True)
+
+    # Display the resulting DataFrame
+    merged_df.head()
+
