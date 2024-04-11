@@ -171,6 +171,12 @@
             </div>
             <div>
                 <form class="model-form" action="/run-model" method="post">
+                    <input type="hidden" name="model" value="clustering">
+                    <button type="submit" class="uk-button model-run uk-button-default">Run Employee Clustering</button>
+                </form>
+            </div>
+            <div>
+                <form class="model-form" action="/run-model" method="post">
                     <input type="hidden" name="model" value="anomaly">
                     <button type="submit" id = "ABut" class="uk-button model-run uk-button-default">Run Anomaly Detection</button>
                 </form>
