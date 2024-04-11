@@ -81,11 +81,82 @@
         </div>
     </nav>
     <div class="uk-container uk-text-center">
+<!-- Button -->
+<button class="uk-button uk-button-default" type="button" uk-toggle="target: #my-modal" style = "margin-top:50px; margin-bottom:0px">What data to upload?</button>
+
+<!-- Modal -->
+<div id="my-modal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Data to Upload</h2>
+        <table class="uk-table uk-table-striped">
+            <!-- Table data -->
+            <thead>
+                <tr>
+                    <th>Column Name</th>
+                    <th>Data Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Emp_Id</td>
+                    <td>String</td>
+                </tr>
+                <tr>
+                    <td>satisfaction_level</td>
+                    <td>Float</td>
+                </tr>
+                <tr>
+                    <td>last_evaluation</td>
+                    <td>Float</td>
+                </tr>
+                <tr>
+                    <td>number_project</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>average_montly_hours</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>time_spend_company</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>Work_accident</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>left</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>promotion_last_5years</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>Department</td>
+                    <td>String</td>
+                </tr>
+                <tr>
+                    <td>salary</td>
+                    <td>String</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">Close</button>
+        </p>
+    </div>
+</div>
+
+</div>
+
+    <div class="uk-container uk-text-center">
         <div class="uk-margin-large-top uk-card uk-card-default uk-card-body uk-width-1-1@m uk-align-center">
             {{ dropzone.create(action='/upload') }}           
         </div>
         
-        <div class="uk-child-width-1-1 uk-child-width-1-2@s uk-child-width-1-4@m uk-text-center" uk-grid>
+        <div class="uk-child-width-1-1 uk-child-width-1-2@s uk-child-width-1-3@m uk-text-center" uk-grid>
             <div>
                 <form class="model-form" action="/run-model" method="post">
                     <input type="hidden" name="model" value="all">
@@ -100,27 +171,22 @@
             </div>
             <div>
                 <form class="model-form" action="/run-model" method="post">
-                    <input type="hidden" name="model" value="clustering">
-                    <button type="submit" class="uk-button model-run uk-button-default">Run Employee Clustering</button>
-                </form>
-            </div>
-            <div>
-                <form class="model-form" action="/run-model" method="post">
                     <input type="hidden" name="model" value="anomaly">
-                    <button type="submit" class="uk-button model-run uk-button-default">Run Anomaly Detection</button>
+                    <button type="submit" id = "ABut" class="uk-button model-run uk-button-default">Run Anomaly Detection</button>
                 </form>
             </div>
         </div>
 
         <div id="spinner" class="spinner"></div>
 
-        {% if download %}
-            <br>
-            <a href="/download" class="uk-button">Download Results</a>
-        {% endif %}
+      
        <!-- Results Display -->
        <div class="uk-container">
         {% if results %}
+            {% if download %}
+            <br>
+            <a href="/download" class="uk-button">Download Results</a>
+            {% endif %}
             <div class="uk-overflow-auto">
                 <table id="yourTableId" class="uk-table uk-table-hover uk-table-middle uk-table-divider">
                     <thead>
@@ -170,6 +236,33 @@
                 </table>
             </div>
         {% endif %}
+        {% if resultsA %}
+            {% if download %}
+                <br>
+                <a href="/downloadAnomaly" class="uk-button">Download Results</a>
+            {% endif %}
+        <div class="uk-overflow-auto">
+            <table id="yourTableId1" class="uk-table uk-table-hover uk-table-middle uk-table-divider">
+                <thead>
+                    <tr>
+                        <th style="text-align:center;">Employee ID</th>
+                        <th style="text-align: center">Average Monthly Hours</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for result in resultsA %}
+                        <tr>
+                            <td>{{ result['Emp_Id'] }}</td>
+                            <td>{{ result['average_monthly_hours'] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Pagination Controls Placeholder -->
+        <div id="paginationContainer1" class="uk-margin"></div>
+    {% endif %}
+        
     </div>
     
                     
@@ -264,10 +357,16 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const table = document.querySelector('#yourTableId');
+            const table1 = document.querySelector('#yourTableId1');
             if (table) {
                 setupPagination();
             } else {
                 console.error('Table with ID #yourTableId not found.');
+            }
+            if (table1) {
+                setupPaginationA();
+            } else {
+                console.error('Table with ID #yourTableId1 not found.');
             }
         });
 
@@ -353,7 +452,97 @@
         
             createPaginationControls(totalPages, pageNumber);
         }
+
+        //----------------------------------------------------------------------------------------------------------------------------
+        
+        function setupPaginationA() {
+            // Adjust this value as per your needs
+            const table = document.querySelector('#yourTableId1');
+            const tableRows = table.querySelectorAll('tbody tr');
+            const totalPages = Math.ceil(tableRows.length / itemsPerPage);
+        
+            // Initially display the first page
+            displayPageA(1, itemsPerPage, totalPages);
+        }
+        
+        function createPaginationControlsA(totalPages, currentPage) {
+            const paginationContainer = document.querySelector('#paginationContainer1');
+            paginationContainer.innerHTML = ''; // Clear existing controls
+        
+            const maxPageNumbersToShow = 5; // Maximum number of page numbers to show at once
+            let startPage = Math.max(currentPage - Math.floor(maxPageNumbersToShow / 2), 1);
+            let endPage = startPage + maxPageNumbersToShow - 1;
+        
+            if (endPage > totalPages) {
+                endPage = totalPages;
+                startPage = Math.max(totalPages - maxPageNumbersToShow + 1, 1);
+            }
+        
+            const ul = document.createElement('ul');
+            ul.className = 'uk-pagination uk-flex-center';
+        
+            const prevLi = document.createElement('li');
+            prevLi.className = currentPage === 1 ? 'uk-disabled' : '';
+            const prevLink = document.createElement('a');
+            prevLink.href = '#';
+            prevLink.innerHTML = '&laquo;'; // or use 'Previous'
+            prevLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (currentPage > 1) displayPageA(currentPage - 1, itemsPerPage, totalPages);
+            });
+            prevLi.appendChild(prevLink);
+            ul.appendChild(prevLi);
+        
+            for (let i = startPage; i <= endPage; i++) {
+                const li = document.createElement('li');
+                li.className = currentPage === i ? 'uk-active' : '';
+                const a = document.createElement('a');
+                a.href = '#';
+                a.textContent = i;
+                a.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    displayPageA(i, itemsPerPage, totalPages);
+                });
+                li.appendChild(a);
+                ul.appendChild(li);
+            }
+        
+            const nextLi = document.createElement('li');
+            nextLi.className = currentPage === totalPages ? 'uk-disabled' : '';
+            const nextLink = document.createElement('a');
+            nextLink.href = '#';
+            nextLink.innerHTML = '&raquo;'; // or use 'Next'
+            nextLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (currentPage < totalPages) displayPageA(currentPage + 1, itemsPerPage, totalPages);
+            });
+            nextLi.appendChild(nextLink);
+            ul.appendChild(nextLi);
+        
+            paginationContainer.appendChild(ul);
+        }
+        
+        function displayPageA(pageNumber, itemsPerPage, totalPages) {
+            const table = document.querySelector('#yourTableId1');
+            const tableRows = table.querySelectorAll('tbody tr');
+            const start = (pageNumber - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+        
+            tableRows.forEach(row => row.style.display = 'none');
+            for (let i = start; i < end && i < tableRows.length; i++) {
+                tableRows[i].style.display = '';
+            }
+        
+            createPaginationControlsA(totalPages, pageNumber);
+        }
+
+
+
+
+
         </script>
+
+    
         
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.18.0/js/uikit-icons.min.js"></script>
