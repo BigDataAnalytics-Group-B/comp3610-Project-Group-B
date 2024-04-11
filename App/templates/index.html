@@ -81,11 +81,82 @@
         </div>
     </nav>
     <div class="uk-container uk-text-center">
+<!-- Button -->
+<button class="uk-button uk-button-default" type="button" uk-toggle="target: #my-modal" style = "margin-top:50px; margin-bottom:0px">What data to upload?</button>
+
+<!-- Modal -->
+<div id="my-modal" uk-modal>
+    <div class="uk-modal-dialog uk-modal-body">
+        <h2 class="uk-modal-title">Data to Upload</h2>
+        <table class="uk-table uk-table-striped">
+            <!-- Table data -->
+            <thead>
+                <tr>
+                    <th>Column Name</th>
+                    <th>Data Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Emp_Id</td>
+                    <td>String</td>
+                </tr>
+                <tr>
+                    <td>satisfaction_level</td>
+                    <td>Float</td>
+                </tr>
+                <tr>
+                    <td>last_evaluation</td>
+                    <td>Float</td>
+                </tr>
+                <tr>
+                    <td>number_project</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>average_montly_hours</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>time_spend_company</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>Work_accident</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>left</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>promotion_last_5years</td>
+                    <td>Integer</td>
+                </tr>
+                <tr>
+                    <td>Department</td>
+                    <td>String</td>
+                </tr>
+                <tr>
+                    <td>salary</td>
+                    <td>String</td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">Close</button>
+        </p>
+    </div>
+</div>
+
+</div>
+
+    <div class="uk-container uk-text-center">
         <div class="uk-margin-large-top uk-card uk-card-default uk-card-body uk-width-1-1@m uk-align-center">
             {{ dropzone.create(action='/upload') }}           
         </div>
         
-        <div class="uk-child-width-1-1 uk-child-width-1-2@s uk-child-width-1-4@m uk-text-center" uk-grid>
+        <div class="uk-child-width-1-1 uk-child-width-1-2@s uk-child-width-1-3@m uk-text-center" uk-grid>
             <div>
                 <form class="model-form" action="/run-model" method="post">
                     <input type="hidden" name="model" value="all">
@@ -96,12 +167,6 @@
                 <form class="model-form" action="/run-model" method="post">
                     <input type="hidden" name="model" value="tenure">
                     <button type="submit" class="uk-button model-run uk-button-default">Run Tenure Estimation</button>
-                </form>
-            </div>
-            <div>
-                <form class="model-form" action="/run-model" method="post">
-                    <input type="hidden" name="model" value="clustering">
-                    <button type="submit" class="uk-button model-run uk-button-default">Run Employee Clustering</button>
                 </form>
             </div>
             <div>
