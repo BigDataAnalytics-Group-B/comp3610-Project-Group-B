@@ -143,8 +143,32 @@
             </div>
             <!-- Pagination Controls Placeholder -->
             <div id="paginationContainer" class="uk-margin"></div>
-        {% else %}
-            <div>No results to display.</div>
+        {% endif %}
+        {% if insights %}
+            <div class="uk-overflow-auto">
+                <table id="yourTableId2" class="uk-table uk-table-hover uk-table-middle uk-table-divider">
+                    <thead>
+                        <tr>
+                            <th style="text-align: center">Cluster</th>
+                            <th style="text-align: center">Satisfaction Level</th>
+                            <th style="text-align: center">Last Evaluation</th>
+                            <th style="text-align: center">Number of Projects</th>
+                            <th style="text-align: center">Average Monthly Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cluster_id, attributes in insights.items() %}
+                        <tr>
+                            <td>{{ cluster_id }}</td>
+                            <td>{{ attributes['satisfaction_level'] }}</td>
+                            <td>{{ attributes['last_evaluation'] }}</td>
+                            <td>{{ attributes['number_project'] }}</td>
+                            <td>{{ attributes['average_monthly_hours'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         {% endif %}
     </div>
     
