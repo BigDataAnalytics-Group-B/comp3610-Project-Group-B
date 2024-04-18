@@ -93,16 +93,79 @@ def get_employee_anomalies():
     
 
     
-    
+from sklearn.decomposition import PCA
+from collections import Counter
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score 
 
 
 
 def get_employee_clusters():
-    merged_df = pd.DataFrame(pd.read_csv("ProjectFiles/Dataset/clustering-data.csv"))
+    filename = 'App/uploads/' + session.get('filename')
+    df = load_data(filename)
+    
+    # Save the 'Emp_Id' column
+    # emp_ids = df['Emp_Id']
+    
+    selected_features = ['satisfaction_level', 'last_evaluation', 'number_project',
+       'average_montly_hours']
+
+    # Create a copy of the selected features DataFrame to avoid SettingWithCopyWarning
+    df_subset = df[selected_features].copy()
+
+    # Scale the selected features
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(df_subset)
+
+    # Perform KMeans clustering
+    silhouette_scores = []
+    num_clusters_range = range(2, 11)
+    for num_clusters in num_clusters_range:
+        kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
+        cluster_labels = kmeans.fit_predict(scaled_features)
+        silhouette_avg = silhouette_score(scaled_features, cluster_labels)
+        silhouette_scores.append(silhouette_avg)
+
+    max_silhouette_score = max(silhouette_scores)
+    optimal_num_clusters = num_clusters_range[silhouette_scores.index(max_silhouette_score)]
+    
+
+    # Assign cluster labels to the DataFrame
+    kmeans = KMeans(n_clusters=optimal_num_clusters, init='k-means++', random_state=42, n_init=10)
+    kmeans.fit(scaled_features)
+    df_subset['cluster'] = kmeans.labels_
+
+    
+
+    test_df = df_subset.copy()
+    # test_df.reset_index(inplace=True)
+
+
+    keep_features = ['satisfaction_level', 'last_evaluation', 'number_project',
+       'average_montly_hours', 'left', 'Emp_Id']
+
+    df_selected_left = df[keep_features]
+    # print(df_selected_left.head())
+
+    # Merge cluster_df with original_dataset using the index as the joining key
+    merged_df = df_selected_left.merge(test_df, left_index=True, right_index=True)
+
+    # Select only the specified columns
+    merged_df = merged_df[['satisfaction_level_x', 'last_evaluation_x', 'number_project_x',
+                        'average_montly_hours_x', 'left', 'cluster', 'Emp_Id']]
+
+    merged_df.rename(columns={
+        'satisfaction_level_x': 'satisfaction_level',
+        'last_evaluation_x': 'last_evaluation',
+        'number_project_x': 'number_project',
+        'average_montly_hours_x': 'average_monthly_hours'
+    }, inplace=True)
+    
     # Define scales for each feature separately
-    project_scales = define_scale(merged_df, 'number_project')
+    project_scales = define_scale(merged_df, 'number_project', None, None)
     satisfaction_scales = define_scale(merged_df, 'satisfaction_level', 0, 1)
-    hours_scales = define_scale(merged_df, 'average_monthly_hours')
+    hours_scales = define_scale(merged_df, 'average_monthly_hours', None, None)
     evaluation_scales = define_scale(merged_df, 'last_evaluation', 0, 1)
 
     # Combine all scales into a single dictionary
@@ -113,22 +176,23 @@ def get_employee_clusters():
         'last_evaluation': evaluation_scales
     }
 
-    print(scales)
-
     cluster_means = cluster_analysis(merged_df, 'cluster', ['satisfaction_level', 'last_evaluation', 'number_project', 'average_monthly_hours', 'left'])
-
-    print(cluster_means)
 
     # Generate insights
     insights = generate_insights(cluster_means, scales)
-    print("Insights:", insights)
+
+
+    # Group the DataFrame by the 'cluster' column and count the number of rows in each group
+    cluster_counts = merged_df.groupby('cluster').size().to_dict()
+
+    # Add the count of employees in each cluster to the insights
+    for cluster, count in cluster_counts.items():
+        insights[cluster]['count'] = count
 
     return insights
 
 
-
-def define_scale(data, feature, lower_bound=None, upper_bound=None):
-    # If bounds are not provided, calculate quartiles for the feature
+def define_scale(data, feature, lower_bound, upper_bound):
     if lower_bound is None:
         lower_bound = data[feature].min()
     if upper_bound is None:
@@ -158,6 +222,10 @@ def cluster_analysis(data, cluster_column, feature_columns):
 def generate_insights(cluster_means, scales):
     insights = {}
 
+    
+    # Get the count of employees in each cluster
+    cluster_counts = cluster_means.index.value_counts().to_dict()
+
     # Iterate over each cluster
     for cluster, means in cluster_means.iterrows():
         cluster_insights = {}
@@ -174,40 +242,9 @@ def generate_insights(cluster_means, scales):
                     cluster_insights[feature] = scale_label
                     break
         
+        # Add count of datapoints in the cluster
+        cluster_insights['count'] = cluster_counts.get(cluster, 0)
+        
         insights[cluster] = cluster_insights
 
     return insights
-
-
-def temp(df, df_subset):
-    # Reset index of cluster_df to make the index a regular column
-    test_df = df_subset
-    # test_df.reset_index(inplace=True)
-
-    keep_features = ['satisfaction_level', 'last_evaluation', 'number_project',
-        'average_montly_hours', 'left']
-
-    df_selected_left = df[keep_features]
-    # print(df_selected_left.head())
-
-    # Merge cluster_df with original_dataset using the index as the joining key
-    merged_df = df_selected_left.merge(test_df, left_index=True, right_index=True)
-
-    # Display merged DataFrame with cluster information and "left" column
-    merged_df
-
-    # Select only the specified columns
-    merged_df = merged_df[['satisfaction_level_x', 'last_evaluation_x', 'number_project_x',
-                        'average_montly_hours_x', 'left', 'cluster']]
-
-    # Rename the columns for clarity
-    merged_df.rename(columns={
-        'satisfaction_level_x': 'satisfaction_level',
-        'last_evaluation_x': 'last_evaluation',
-        'number_project_x': 'number_project',
-        'average_montly_hours_x': 'average_monthly_hours'
-    }, inplace=True)
-
-    # Display the resulting DataFrame
-    merged_df.head()
-
