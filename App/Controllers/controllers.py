@@ -125,7 +125,7 @@ def get_employee_clusters():
 
     # Perform KMeans clustering
     silhouette_scores = []
-    num_clusters_range = range(2, 11)
+    num_clusters_range = range(2, 6)
     for num_clusters in num_clusters_range:
         kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
         cluster_labels = kmeans.fit_predict(scaled_features)
