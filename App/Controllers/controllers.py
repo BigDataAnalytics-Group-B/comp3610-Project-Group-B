@@ -104,15 +104,20 @@ from sklearn.metrics import silhouette_score
 def get_employee_clusters():
     filename = 'App/uploads/' + session.get('filename')
     df = load_data(filename)
-    
-    # Save the 'Emp_Id' column
-    # emp_ids = df['Emp_Id']
+
+    # Check if uploaded file is a csv
+    if filename.endswith('.csv'):
+        # Convert 'last_evaluation' column to float
+        df['last_evaluation'] = df['last_evaluation'].str.rstrip('%').astype(float) / 100.0
+        # df['satisfaction_level'] = df['satisfaction_level'].str.rstrip('%').astype(float) / 100.0
+
     
     selected_features = ['satisfaction_level', 'last_evaluation', 'number_project',
        'average_montly_hours']
 
-    # Create a copy of the selected features DataFrame to avoid SettingWithCopyWarning
+    
     df_subset = df[selected_features].copy()
+    print(df_subset.dtypes)
 
     # Scale the selected features
     scaler = StandardScaler()
