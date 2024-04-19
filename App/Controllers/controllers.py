@@ -117,7 +117,7 @@ def get_employee_clusters():
 
     
     df_subset = df[selected_features].copy()
-    print(df_subset.dtypes)
+    # print(df_subset.dtypes)
 
     # Scale the selected features
     scaler = StandardScaler()
@@ -190,9 +190,17 @@ def get_employee_clusters():
     # Group the DataFrame by the 'cluster' column and count the number of rows in each group
     cluster_counts = merged_df.groupby('cluster').size().to_dict()
 
-    # Add the count of employees in each cluster to the insights
+
     for cluster, count in cluster_counts.items():
-        insights[cluster]['count'] = count
+        # Calculate turnover rate for the cluster
+        cluster_turnover_rate = merged_df[(merged_df['cluster'] == cluster) & (merged_df['left'] == 1)].shape[0] / count
+        cluster_turnover_rate = round(cluster_turnover_rate * 100, 2)
+        
+
+        insights[cluster]['count'] = count # Add the count of employees in cluster
+        insights[cluster]['turnover_rate'] = cluster_turnover_rate
+
+    # print(insights)
 
     return insights
 
@@ -248,6 +256,9 @@ def generate_insights(cluster_means, scales):
                     break
         
         # Add count of datapoints in the cluster
+        cluster_insights['count'] = cluster_counts.get(cluster, 0)
+
+        
         cluster_insights['count'] = cluster_counts.get(cluster, 0)
         
         insights[cluster] = cluster_insights
