@@ -8,13 +8,15 @@ def convert_to_years_months(total_years):
     # Separate the year into its integer and fractional components
     years_int = int(total_years)
     months_fraction = total_years - years_int
-    # Convert the fractional year to months, rounding to the nearest whole number
+    
+    # Convert the fractional year to months
     months = round(months_fraction * 12)
+    
     # Adjust for rounding up to 12 months, which should roll over to an additional year
     if months == 12:
         years_int += 1
         months = 0
-    return years_int, months  # Or return f"{years_int} years, {months} months" for a string representation
+    return years_int, months  
 
 
 def load_data(filename):
@@ -37,7 +39,8 @@ def get_employee_tenure_predictions():
     # Save the 'Emp_Id' column
     emp_ids = df['Emp_Id']
     
-    clean_df = df[['satisfaction_level', 'number_project']]
+    clean_df = one_hot_encode(df)
+    clean_df = df[['satisfaction_level', 'last_evaluation', 'number_project', 'average_montly_hours']]
     new_predictions = loaded_model.predict(clean_df)
     
     # Convert predictions to years and months
@@ -54,7 +57,7 @@ def get_employee_anomalies():
     filename = 'App/uploads/' + session.get('filename')
     
     df = load_data(filename)
-
+    
     if 'average_montly_hours' in df.columns:
         df['average_monthly_hours'] = df['average_montly_hours'].copy()
         df.drop(columns=['average_montly_hours'], inplace=True)
@@ -84,18 +87,8 @@ def get_employee_anomalies():
     })
     
     results_list = results_df.to_dict(orient='records')
-    
-    # print(results_list)
-    
+       
     return results_list
-
-    
-    
-
-    
-    
-
-
 
 def get_employee_clusters():
     merged_df = pd.DataFrame(pd.read_csv("ProjectFiles/Dataset/clustering-data.csv"))
@@ -145,15 +138,11 @@ def define_scale(data, feature, lower_bound=None, upper_bound=None):
 
     return scales
 
-
-
 def cluster_analysis(data, cluster_column, feature_columns):
     # Group the data by cluster and calculate the mean values of features
     cluster_means = data.groupby(cluster_column)[feature_columns].mean()
 
     return cluster_means
-
-
 
 def generate_insights(cluster_means, scales):
     insights = {}
@@ -177,7 +166,6 @@ def generate_insights(cluster_means, scales):
         insights[cluster] = cluster_insights
 
     return insights
-
 
 def temp(df, df_subset):
     # Reset index of cluster_df to make the index a regular column
