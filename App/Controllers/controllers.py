@@ -96,6 +96,7 @@ def get_employee_anomalies():
 from sklearn.decomposition import PCA
 from collections import Counter
 from sklearn.cluster import KMeans
+from sklearn.cluster import MiniBatchKMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score 
 
@@ -125,12 +126,22 @@ def get_employee_clusters():
 
     # Perform KMeans clustering
     silhouette_scores = []
+    # num_clusters_range = range(2, 6)
+    # for num_clusters in num_clusters_range:
+    #     kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
+    #     cluster_labels = kmeans.fit_predict(scaled_features)
+    #     silhouette_avg = silhouette_score(scaled_features, cluster_labels)
+    #     silhouette_scores.append(silhouette_avg)
+
     num_clusters_range = range(2, 6)
     for num_clusters in num_clusters_range:
-        kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
+        batch_size = 2000
+        kmeans = MiniBatchKMeans(n_clusters=num_clusters, batch_size=batch_size, random_state=42)
         cluster_labels = kmeans.fit_predict(scaled_features)
+
         silhouette_avg = silhouette_score(scaled_features, cluster_labels)
         silhouette_scores.append(silhouette_avg)
+
 
     max_silhouette_score = max(silhouette_scores)
     optimal_num_clusters = num_clusters_range[silhouette_scores.index(max_silhouette_score)]
