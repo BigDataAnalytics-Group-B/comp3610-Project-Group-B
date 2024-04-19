@@ -135,7 +135,7 @@ def get_employee_clusters():
 
     num_clusters_range = range(2, 6)
     for num_clusters in num_clusters_range:
-        batch_size = 2000
+        batch_size = 500
         kmeans = MiniBatchKMeans(n_clusters=num_clusters, batch_size=batch_size, random_state=42)
         cluster_labels = kmeans.fit_predict(scaled_features)
 
