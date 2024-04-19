@@ -80,8 +80,32 @@ def run_model():
                 print(E)
             return render_template('index.html', results=results, download=True)
         elif model == 'clustering':
-            insights = get_employee_clusters()
+            try:
+                insights = get_employee_clusters()
+
+                print("toothache")
+                print(insights)
+
+                # with open("App\\resultsClustering.csv", 'w', newline='') as csvfile:
+                #     writer = csv.writer(csvfile)
+                #     writer.writerows(insights)
+
+                with open("App\\resultsClustering.csv", 'w', newline='') as csvfile:
+                    fieldnames = ['cluster', 'satisfaction_level', 'last_evaluation', 'number_project', 'average_monthly_hours', 'count', 'turnover_rate']
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    writer.writeheader()
+                    
+                    # Convert insights dictionary to a list of dictionaries
+                    insights_list = [{**{'cluster': k}, **v} for k, v in insights.items()]
+
+                    writer.writerows(insights_list)
+
+
+            except Exception as E:
+                print(E)
+
             return render_template('index.html', insights=insights, download=True)
+
         elif model == 'anomaly':
             try:
                 resultsA = get_employee_anomalies()
@@ -138,5 +162,22 @@ def download_file_A():
         response = send_file(tmp.name, as_attachment=True)
         # Specify the desired download name in the Content-Disposition header
         response.headers["Content-Disposition"] = "attachment; filename=resultsAnomaly.xlsx"
+        
+        return response
+
+@app.route('/downloadClustering')
+def download_file_Clustering():
+    # Read the CSV file into a pandas DataFrame
+    df = pd.read_csv('App\\resultsClustering.csv')
+
+    # Use a temporary file to avoid file management issues
+    with NamedTemporaryFile(delete=False, suffix='.xlsx', mode='w+b') as tmp:
+        # Convert the DataFrame to an XLSX file and save it
+        df.to_excel(tmp.name, index=False)
+
+        # Prepare the response, sending the temporary file as an attachment
+        response = send_file(tmp.name, as_attachment=True)
+        # Specify the desired download name in the Content-Disposition header
+        response.headers["Content-Disposition"] = "attachment; filename=resultsClustering.xlsx"
         
         return response
