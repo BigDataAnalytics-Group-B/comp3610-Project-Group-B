@@ -124,6 +124,10 @@ def get_employee_clusters():
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(df_subset)
 
+    # Reduce dimensionality using PCA
+    pca = PCA(n_components=0.95)  # Retain 95% of the variance
+    scaled_features_pca = pca.fit_transform(scaled_features)
+
     # Perform KMeans clustering
     silhouette_scores = []
     # num_clusters_range = range(2, 6)
@@ -137,9 +141,9 @@ def get_employee_clusters():
     for num_clusters in num_clusters_range:
         batch_size = 500
         kmeans = MiniBatchKMeans(n_clusters=num_clusters, batch_size=batch_size, random_state=42)
-        cluster_labels = kmeans.fit_predict(scaled_features)
+        cluster_labels = kmeans.fit_predict(scaled_features_pca)
 
-        silhouette_avg = silhouette_score(scaled_features, cluster_labels)
+        silhouette_avg = silhouette_score(scaled_features_pca, cluster_labels)
         silhouette_scores.append(silhouette_avg)
 
 
