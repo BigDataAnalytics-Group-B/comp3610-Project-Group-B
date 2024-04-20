@@ -83,9 +83,9 @@ def run_model():
             try:
                 insights, employee_clusters = get_employee_clusters()
 
-                print(employee_clusters)
-                print("toothache")
-                print(insights)
+                # print(employee_clusters)
+                # print("---")
+                # print(insights)
 
                 # with open("App\\resultsClustering.csv", 'w', newline='') as csvfile:
                 #     writer = csv.writer(csvfile)

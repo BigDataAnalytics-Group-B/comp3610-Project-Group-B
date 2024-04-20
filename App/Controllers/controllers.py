@@ -143,13 +143,12 @@ def get_employee_clusters():
         'average_montly_hours_x': 'average_monthly_hours'
     }, inplace=True)
     
-    # Define scales for each feature separately
+    
     project_scales = define_scale(merged_df, 'number_project', None, None)
     satisfaction_scales = define_scale(merged_df, 'satisfaction_level', 0, 1)
     hours_scales = define_scale(merged_df, 'average_monthly_hours', None, None)
     evaluation_scales = define_scale(merged_df, 'last_evaluation', 0, 1)
 
-    # Combine all scales into a single dictionary
     scales = {
         'number_project': project_scales,
         'satisfaction_level': satisfaction_scales,
@@ -159,11 +158,8 @@ def get_employee_clusters():
 
     cluster_means = cluster_analysis(merged_df, 'cluster', ['satisfaction_level', 'last_evaluation', 'number_project', 'average_monthly_hours', 'left'])
 
-    # Generate insights
     insights = generate_insights(cluster_means, scales)
 
-
-    # Group the DataFrame by the 'cluster' column and count the number of rows in each group
     cluster_counts = merged_df.groupby('cluster').size().to_dict()
 
 
@@ -173,7 +169,7 @@ def get_employee_clusters():
         cluster_turnover_rate = round(cluster_turnover_rate * 100, 2)
         
 
-        insights[cluster]['count'] = count # Add the count of employees in cluster
+        insights[cluster]['count'] = count # Add count of employees in cluster
         insights[cluster]['turnover_rate'] = cluster_turnover_rate
 
     # print(insights)
@@ -205,7 +201,6 @@ def define_scale(data, feature, lower_bound, upper_bound):
 
 
 def cluster_analysis(data, cluster_column, feature_columns):
-    # Group the data by cluster and calculate the mean values of features
     cluster_means = data.groupby(cluster_column)[feature_columns].mean()
 
     return cluster_means
@@ -215,11 +210,8 @@ def cluster_analysis(data, cluster_column, feature_columns):
 def generate_insights(cluster_means, scales):
     insights = {}
 
-    
-    # Get the count of employees in each cluster
     cluster_counts = cluster_means.index.value_counts().to_dict()
 
-    # Iterate over each cluster
     for cluster, means in cluster_means.iterrows():
         cluster_insights = {}
         
@@ -234,10 +226,6 @@ def generate_insights(cluster_means, scales):
                 if scale_range[0] <= value <= scale_range[1]:
                     cluster_insights[feature] = scale_label
                     break
-        
-        # Add count of datapoints in the cluster
-        cluster_insights['count'] = cluster_counts.get(cluster, 0)
-
         
         cluster_insights['count'] = cluster_counts.get(cluster, 0)
         
