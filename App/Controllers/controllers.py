@@ -3,6 +3,7 @@ import pandas as pd
 from flask import session
 from ProjectFiles.DataPreprocessing.data_cleaning import *
 import os
+from sklearn.preprocessing import StandardScaler
 
 def convert_to_years_months(total_years):
     # Separate the year into its integer and fractional components
@@ -89,16 +90,65 @@ def get_employee_anomalies():
     results_list = results_df.to_dict(orient='records')
        
     return results_list
+  
 
 def get_employee_clusters():
-    merged_df = pd.DataFrame(pd.read_csv("ProjectFiles/Dataset/clustering-data.csv"))
-    # Define scales for each feature separately
-    project_scales = define_scale(merged_df, 'number_project')
+    loaded_model = load('ProjectFiles/Models/kmeans_model.joblib')
+
+    filename = 'App/uploads/' + session.get('filename')
+    df = load_data(filename)
+
+    if filename.endswith('.csv'):
+        df['last_evaluation'] = df['last_evaluation'].str.rstrip('%').astype(float) / 100.0
+        # df['satisfaction_level'] = df['satisfaction_level'].str.rstrip('%').astype(float) / 100.0
+
+
+    selected_features = ['satisfaction_level', 'last_evaluation', 'number_project',
+       'average_montly_hours']
+
+    
+    df_subset = df[selected_features].copy()
+    # print(df_subset.dtypes)
+
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(df_subset)
+
+    km_clusters = loaded_model.predict(scaled_features)
+
+    df_subset['cluster'] = km_clusters
+    # print(df_subset.head())
+
+
+    test_df = df_subset.copy()
+    # test_df.reset_index(inplace=True)
+
+
+    keep_features = ['satisfaction_level', 'last_evaluation', 'number_project',
+       'average_montly_hours', 'left', 'Emp_Id']
+
+    df_selected_left = df[keep_features]
+    # print(df_selected_left.head())
+
+    # Merge cluster_df with original_dataset using the index as the joining key
+    merged_df = df_selected_left.merge(test_df, left_index=True, right_index=True)
+
+    # Select only the specified columns
+    merged_df = merged_df[['satisfaction_level_x', 'last_evaluation_x', 'number_project_x',
+                        'average_montly_hours_x', 'left', 'cluster', 'Emp_Id']]
+
+    merged_df.rename(columns={
+        'satisfaction_level_x': 'satisfaction_level',
+        'last_evaluation_x': 'last_evaluation',
+        'number_project_x': 'number_project',
+        'average_montly_hours_x': 'average_monthly_hours'
+    }, inplace=True)
+    
+    
+    project_scales = define_scale(merged_df, 'number_project', None, None)
     satisfaction_scales = define_scale(merged_df, 'satisfaction_level', 0, 1)
-    hours_scales = define_scale(merged_df, 'average_monthly_hours')
+    hours_scales = define_scale(merged_df, 'average_monthly_hours', None, None)
     evaluation_scales = define_scale(merged_df, 'last_evaluation', 0, 1)
 
-    # Combine all scales into a single dictionary
     scales = {
         'number_project': project_scales,
         'satisfaction_level': satisfaction_scales,
@@ -106,22 +156,32 @@ def get_employee_clusters():
         'last_evaluation': evaluation_scales
     }
 
-    print(scales)
-
     cluster_means = cluster_analysis(merged_df, 'cluster', ['satisfaction_level', 'last_evaluation', 'number_project', 'average_monthly_hours', 'left'])
 
-    print(cluster_means)
-
-    # Generate insights
     insights = generate_insights(cluster_means, scales)
-    print("Insights:", insights)
 
-    return insights
-
+    cluster_counts = merged_df.groupby('cluster').size().to_dict()
 
 
-def define_scale(data, feature, lower_bound=None, upper_bound=None):
-    # If bounds are not provided, calculate quartiles for the feature
+    for cluster, count in cluster_counts.items():
+        # Calculate turnover rate for the cluster
+        cluster_turnover_rate = merged_df[(merged_df['cluster'] == cluster) & (merged_df['left'] == 1)].shape[0] / count
+        cluster_turnover_rate = round(cluster_turnover_rate * 100, 2)
+        
+
+        insights[cluster]['count'] = count # Add count of employees in cluster
+        insights[cluster]['turnover_rate'] = cluster_turnover_rate
+
+    # print(insights)
+
+    employee_clusters = merged_df.copy()
+    employee_clusters = employee_clusters[['Emp_Id', 'cluster']]
+
+    return insights, employee_clusters
+
+
+
+def define_scale(data, feature, lower_bound, upper_bound):
     if lower_bound is None:
         lower_bound = data[feature].min()
     if upper_bound is None:
@@ -139,7 +199,6 @@ def define_scale(data, feature, lower_bound=None, upper_bound=None):
     return scales
 
 def cluster_analysis(data, cluster_column, feature_columns):
-    # Group the data by cluster and calculate the mean values of features
     cluster_means = data.groupby(cluster_column)[feature_columns].mean()
 
     return cluster_means
@@ -147,7 +206,8 @@ def cluster_analysis(data, cluster_column, feature_columns):
 def generate_insights(cluster_means, scales):
     insights = {}
 
-    # Iterate over each cluster
+    cluster_counts = cluster_means.index.value_counts().to_dict()
+
     for cluster, means in cluster_means.iterrows():
         cluster_insights = {}
         
@@ -163,39 +223,9 @@ def generate_insights(cluster_means, scales):
                     cluster_insights[feature] = scale_label
                     break
         
+        cluster_insights['count'] = cluster_counts.get(cluster, 0)
+        
         insights[cluster] = cluster_insights
 
+
     return insights
-
-def temp(df, df_subset):
-    # Reset index of cluster_df to make the index a regular column
-    test_df = df_subset
-    # test_df.reset_index(inplace=True)
-
-    keep_features = ['satisfaction_level', 'last_evaluation', 'number_project',
-        'average_montly_hours', 'left']
-
-    df_selected_left = df[keep_features]
-    # print(df_selected_left.head())
-
-    # Merge cluster_df with original_dataset using the index as the joining key
-    merged_df = df_selected_left.merge(test_df, left_index=True, right_index=True)
-
-    # Display merged DataFrame with cluster information and "left" column
-    merged_df
-
-    # Select only the specified columns
-    merged_df = merged_df[['satisfaction_level_x', 'last_evaluation_x', 'number_project_x',
-                        'average_montly_hours_x', 'left', 'cluster']]
-
-    # Rename the columns for clarity
-    merged_df.rename(columns={
-        'satisfaction_level_x': 'satisfaction_level',
-        'last_evaluation_x': 'last_evaluation',
-        'number_project_x': 'number_project',
-        'average_montly_hours_x': 'average_monthly_hours'
-    }, inplace=True)
-
-    # Display the resulting DataFrame
-    merged_df.head()
-
