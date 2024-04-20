@@ -81,9 +81,10 @@ def run_model():
             return render_template('index.html', results=results, download=True)
         elif model == 'clustering':
             try:
-                insights = get_employee_clusters()
+                insights, employee_clusters = get_employee_clusters()
 
-                # print("toothache")
+                print(employee_clusters)
+                print("toothache")
                 print(insights)
 
                 # with open("App\\resultsClustering.csv", 'w', newline='') as csvfile:
@@ -99,6 +100,14 @@ def run_model():
                     insights_list = [{**{'cluster': k}, **v} for k, v in insights.items()]
 
                     writer.writerows(insights_list)
+
+                with open("App/resultsEmployeeClusters.csv", 'w', newline='') as csvfile:
+                    fieldnames = ['Emp_Id', 'Cluster']
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    writer.writeheader()
+
+                    for emp_id, cluster in employee_clusters.items():
+                        writer.writerow({'Emp_Id': emp_id, 'Cluster': cluster})
 
 
             except Exception as E:
@@ -179,5 +188,22 @@ def download_file_Clustering():
         response = send_file(tmp.name, as_attachment=True)
         # Specify the desired download name in the Content-Disposition header
         response.headers["Content-Disposition"] = "attachment; filename=resultsClustering.xlsx"
+        
+        return response
+
+@app.route('/downloadEmployeeClusters')
+def download_file_emp_clusters():
+    # Read the CSV file into a pandas DataFrame
+    df = pd.read_csv('App\\resultsEmployeeClusters.csv')
+
+    # Use a temporary file to avoid file management issues
+    with NamedTemporaryFile(delete=False, suffix='.xlsx', mode='w+b') as tmp:
+        # Convert the DataFrame to an XLSX file and save it
+        df.to_excel(tmp.name, index=False)
+
+        # Prepare the response, sending the temporary file as an attachment
+        response = send_file(tmp.name, as_attachment=True)
+        # Specify the desired download name in the Content-Disposition header
+        response.headers["Content-Disposition"] = "attachment; filename=resultsEmployeeClusters.xlsx"
         
         return response
