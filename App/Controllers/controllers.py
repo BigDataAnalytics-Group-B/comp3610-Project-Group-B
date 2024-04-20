@@ -100,15 +100,12 @@ def get_employee_clusters():
 
     if filename.endswith('.csv'):
         df['last_evaluation'] = df['last_evaluation'].str.rstrip('%').astype(float) / 100.0
-        # df['satisfaction_level'] = df['satisfaction_level'].str.rstrip('%').astype(float) / 100.0
-
 
     selected_features = ['satisfaction_level', 'last_evaluation', 'number_project',
        'average_montly_hours']
 
-    
-    df_subset = df[selected_features].copy()
-    # print(df_subset.dtypes)
+
+    df_subset = df[selected_features]
 
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(df_subset)
@@ -123,14 +120,14 @@ def get_employee_clusters():
     # test_df.reset_index(inplace=True)
 
 
+
     keep_features = ['satisfaction_level', 'last_evaluation', 'number_project',
        'average_montly_hours', 'left', 'Emp_Id']
 
     df_selected_left = df[keep_features]
-    # print(df_selected_left.head())
 
     # Merge cluster_df with original_dataset using the index as the joining key
-    merged_df = df_selected_left.merge(test_df, left_index=True, right_index=True)
+    merged_df = df_selected_left.merge(df_subset, left_index=True, right_index=True)
 
     # Select only the specified columns
     merged_df = merged_df[['satisfaction_level_x', 'last_evaluation_x', 'number_project_x',
@@ -162,12 +159,10 @@ def get_employee_clusters():
 
     cluster_counts = merged_df.groupby('cluster').size().to_dict()
 
-
     for cluster, count in cluster_counts.items():
         # Calculate turnover rate for the cluster
         cluster_turnover_rate = merged_df[(merged_df['cluster'] == cluster) & (merged_df['left'] == 1)].shape[0] / count
-        cluster_turnover_rate = round(cluster_turnover_rate * 100, 2)
-        
+        cluster_turnover_rate = round(cluster_turnover_rate * 100, 2)     
 
         insights[cluster]['count'] = count # Add count of employees in cluster
         insights[cluster]['turnover_rate'] = cluster_turnover_rate
@@ -178,7 +173,6 @@ def get_employee_clusters():
     employee_clusters = employee_clusters[['Emp_Id', 'cluster']]
 
     return insights, employee_clusters
-
 
 
 def define_scale(data, feature, lower_bound, upper_bound):
@@ -222,7 +216,7 @@ def generate_insights(cluster_means, scales):
                 if scale_range[0] <= value <= scale_range[1]:
                     cluster_insights[feature] = scale_label
                     break
-        
+
         cluster_insights['count'] = cluster_counts.get(cluster, 0)
         
         insights[cluster] = cluster_insights
