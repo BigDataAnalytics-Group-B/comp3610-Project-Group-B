@@ -35,5 +35,5 @@ Insights and conclusions drawn from analysis of this dataset may be generalized 
 
 ## Deliverables
 - [Github Repository](https://github.com/BigDataAnalytics-Group-B/comp3610-Project-Group-B): A repository containing the Jupyter Notebook with source code.
-- Final Report: A 10-page final report outlining the details, findings, and other key information about the project.
+- [Final Report](https://github.com/BigDataAnalytics-Group-B/comp3610-Project-Group-B/blob/main/Group_B_Report.pdf): A 10-page final report outlining the details, findings, and other key information about the project.
 - [Web Application](https://comp3610-project-group-b.onrender.com/): A simple web-based flask application that enables companies to upload employee data in csv or xslx format. The application will analyse the data to identify key retention drivers and forecast employee tenure.
