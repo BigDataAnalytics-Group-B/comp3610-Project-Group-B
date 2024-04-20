@@ -97,6 +97,7 @@ def get_employee_clusters():
 
     filename = 'App/uploads/' + session.get('filename')
     df = load_data(filename)
+    df.dropna(inplace=True)
 
     if filename.endswith('.csv'):
         df['last_evaluation'] = df['last_evaluation'].str.rstrip('%').astype(float) / 100.0
