@@ -101,7 +101,7 @@ def run_model():
 
                     writer.writerows(insights_list)
 
-                with open("App/resultsEmployeeClusters.csv", 'w', newline='') as csvfile:
+                with open("App\\resultsEmployeeClusters.csv", 'w', newline='') as csvfile:
                     fieldnames = ['Emp_Id', 'Cluster']
                     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
                     writer.writeheader()
