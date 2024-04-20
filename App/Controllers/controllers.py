@@ -101,8 +101,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import silhouette_score 
 
 
-
 def get_employee_clusters():
+    loaded_model = load('ProjectFiles/Models/kmeans_model.joblib')
+
     filename = 'App/uploads/' + session.get('filename')
     df = load_data(filename)
 
@@ -112,51 +113,22 @@ def get_employee_clusters():
         df['last_evaluation'] = df['last_evaluation'].str.rstrip('%').astype(float) / 100.0
         # df['satisfaction_level'] = df['satisfaction_level'].str.rstrip('%').astype(float) / 100.0
 
-    
+
     selected_features = ['satisfaction_level', 'last_evaluation', 'number_project',
        'average_montly_hours']
 
     
     df_subset = df[selected_features].copy()
-    # print(df_subset.dtypes)
+    print(df_subset.dtypes)
 
-    # Scale the selected features
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(df_subset)
 
-    # Reduce dimensionality using PCA
-    pca = PCA(n_components=0.95)  # Retain 95% of the variance
-    scaled_features_pca = pca.fit_transform(scaled_features)
+    km_clusters = loaded_model.predict(scaled_features)
 
-    # Perform KMeans clustering
-    silhouette_scores = []
-    # num_clusters_range = range(2, 6)
-    # for num_clusters in num_clusters_range:
-    #     kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
-    #     cluster_labels = kmeans.fit_predict(scaled_features)
-    #     silhouette_avg = silhouette_score(scaled_features, cluster_labels)
-    #     silhouette_scores.append(silhouette_avg)
+    df_subset['cluster'] = km_clusters
+    print(df_subset.head())
 
-    num_clusters_range = range(2, 6)
-    for num_clusters in num_clusters_range:
-        batch_size = 500
-        kmeans = MiniBatchKMeans(n_clusters=num_clusters, batch_size=batch_size, random_state=42)
-        cluster_labels = kmeans.fit_predict(scaled_features_pca)
-
-        silhouette_avg = silhouette_score(scaled_features_pca, cluster_labels)
-        silhouette_scores.append(silhouette_avg)
-
-
-    max_silhouette_score = max(silhouette_scores)
-    optimal_num_clusters = num_clusters_range[silhouette_scores.index(max_silhouette_score)]
-    
-
-    # Assign cluster labels to the DataFrame
-    kmeans = KMeans(n_clusters=optimal_num_clusters, init='k-means++', random_state=42, n_init=10)
-    kmeans.fit(scaled_features)
-    df_subset['cluster'] = kmeans.labels_
-
-    
 
     test_df = df_subset.copy()
     # test_df.reset_index(inplace=True)
@@ -219,6 +191,124 @@ def get_employee_clusters():
 
     return insights
 
+# def get_employee_clusters():
+#     filename = 'App/uploads/' + session.get('filename')
+#     df = load_data(filename)
+
+#     # Check if uploaded file is a csv
+#     if filename.endswith('.csv'):
+#         # Convert 'last_evaluation' column to float
+#         df['last_evaluation'] = df['last_evaluation'].str.rstrip('%').astype(float) / 100.0
+#         # df['satisfaction_level'] = df['satisfaction_level'].str.rstrip('%').astype(float) / 100.0
+
+    
+#     selected_features = ['satisfaction_level', 'last_evaluation', 'number_project',
+#        'average_montly_hours']
+
+    
+#     df_subset = df[selected_features].copy()
+#     # print(df_subset.dtypes)
+
+#     # Scale the selected features
+#     scaler = StandardScaler()
+#     scaled_features = scaler.fit_transform(df_subset)
+
+#     # Reduce dimensionality using PCA
+#     pca = PCA(n_components=0.95)  # Retain 95% of the variance
+#     scaled_features_pca = pca.fit_transform(scaled_features)
+
+#     # Perform KMeans clustering
+#     silhouette_scores = []
+#     # num_clusters_range = range(2, 6)
+#     # for num_clusters in num_clusters_range:
+#     #     kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
+#     #     cluster_labels = kmeans.fit_predict(scaled_features)
+#     #     silhouette_avg = silhouette_score(scaled_features, cluster_labels)
+#     #     silhouette_scores.append(silhouette_avg)
+
+#     num_clusters_range = range(2, 6)
+#     for num_clusters in num_clusters_range:
+#         batch_size = 500
+#         kmeans = MiniBatchKMeans(n_clusters=num_clusters, batch_size=batch_size, random_state=42)
+#         cluster_labels = kmeans.fit_predict(scaled_features_pca)
+
+#         silhouette_avg = silhouette_score(scaled_features_pca, cluster_labels)
+#         silhouette_scores.append(silhouette_avg)
+
+
+#     max_silhouette_score = max(silhouette_scores)
+#     optimal_num_clusters = num_clusters_range[silhouette_scores.index(max_silhouette_score)]
+    
+
+#     # Assign cluster labels to the DataFrame
+#     kmeans = KMeans(n_clusters=optimal_num_clusters, init='k-means++', random_state=42, n_init=10)
+#     kmeans.fit(scaled_features)
+#     df_subset['cluster'] = kmeans.labels_
+
+    
+
+#     test_df = df_subset.copy()
+#     # test_df.reset_index(inplace=True)
+
+
+#     keep_features = ['satisfaction_level', 'last_evaluation', 'number_project',
+#        'average_montly_hours', 'left', 'Emp_Id']
+
+#     df_selected_left = df[keep_features]
+#     # print(df_selected_left.head())
+
+#     # Merge cluster_df with original_dataset using the index as the joining key
+#     merged_df = df_selected_left.merge(test_df, left_index=True, right_index=True)
+
+#     # Select only the specified columns
+#     merged_df = merged_df[['satisfaction_level_x', 'last_evaluation_x', 'number_project_x',
+#                         'average_montly_hours_x', 'left', 'cluster', 'Emp_Id']]
+
+#     merged_df.rename(columns={
+#         'satisfaction_level_x': 'satisfaction_level',
+#         'last_evaluation_x': 'last_evaluation',
+#         'number_project_x': 'number_project',
+#         'average_montly_hours_x': 'average_monthly_hours'
+#     }, inplace=True)
+    
+#     # Define scales for each feature separately
+#     project_scales = define_scale(merged_df, 'number_project', None, None)
+#     satisfaction_scales = define_scale(merged_df, 'satisfaction_level', 0, 1)
+#     hours_scales = define_scale(merged_df, 'average_monthly_hours', None, None)
+#     evaluation_scales = define_scale(merged_df, 'last_evaluation', 0, 1)
+
+#     # Combine all scales into a single dictionary
+#     scales = {
+#         'number_project': project_scales,
+#         'satisfaction_level': satisfaction_scales,
+#         'average_monthly_hours': hours_scales,
+#         'last_evaluation': evaluation_scales
+#     }
+
+#     cluster_means = cluster_analysis(merged_df, 'cluster', ['satisfaction_level', 'last_evaluation', 'number_project', 'average_monthly_hours', 'left'])
+
+#     # Generate insights
+#     insights = generate_insights(cluster_means, scales)
+
+
+#     # Group the DataFrame by the 'cluster' column and count the number of rows in each group
+#     cluster_counts = merged_df.groupby('cluster').size().to_dict()
+
+
+#     for cluster, count in cluster_counts.items():
+#         # Calculate turnover rate for the cluster
+#         cluster_turnover_rate = merged_df[(merged_df['cluster'] == cluster) & (merged_df['left'] == 1)].shape[0] / count
+#         cluster_turnover_rate = round(cluster_turnover_rate * 100, 2)
+        
+
+#         insights[cluster]['count'] = count # Add the count of employees in cluster
+#         insights[cluster]['turnover_rate'] = cluster_turnover_rate
+
+#     # print(insights)
+
+#     return insights
+
+#--
 
 def define_scale(data, feature, lower_bound, upper_bound):
     if lower_bound is None:
