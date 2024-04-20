@@ -5,13 +5,16 @@ from App.database import get_migrate
 from App.main import create_app
 from App.Controllers.controllers import get_employee_tenure_predictions, get_employee_clusters, get_employee_anomalies
 import csv
+from flask import request, session, flash
+from flask_dropzone import Dropzone
+from flask import send_file
+import pandas as pd
+from tempfile import NamedTemporaryFile
 
 app = create_app()
 
-from flask_dropzone import Dropzone
 dropzone = Dropzone(app)
 migrate = get_migrate(app)
-
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -20,20 +23,7 @@ def page_not_found(error):
 @app.route('/', methods=['GET'])
 def home():
     return render_template("index.html") 
-
-# @app.route('/upload', methods=['POST'])
-# def upload_file():
-#     if 'file' not in request.files:
-#         return 'No file part'
-#     file = request.files['file']
-#     if file.filename == '':
-#         return 'No selected file'
-#     # if not file.filename.endswith('.csv'):
-#     #     return 'Invalid file type'
-#     filename = secure_filename(file.filename)
-#     file.save(os.path.join(app.config['UPLOADED_PHOTOS_DEST'], filename))
-#     return 'File uploaded successfully'
-from flask import Flask, request, session
+   
 @app.route('/upload', methods=['POST'])
 def upload_file():
     delete_file()
@@ -60,14 +50,11 @@ def delete_file():
             pass  # File does not exist
     return 'File deleted'
 
-
-import time
 @app.route('/run-model', methods=['POST'])
 def run_model():
     try:
         model = request.form['model']
-        print(session)
-        print("model is " + model)
+
         if model == 'all':
             pass
         elif model == 'tenure':
@@ -77,7 +64,7 @@ def run_model():
                     writer = csv.writer(csvfile)
                     writer.writerows(results)
             except Exception as E:
-                print(E)
+                print("Error when running Tenure model: " + str(E))
             return render_template('index.html', results=results, download=True)
         elif model == 'clustering':
             try:
@@ -130,15 +117,12 @@ def run_model():
             except Exception as E:
                 print(E)
             return render_template('index.html', resultsA=resultsA, download=True)
-            pass
-        return "model here"
+        
+        flash("Error occurred while processing request")
+        return render_template('index.html')
     except Exception as e:
         print(e)
         return render_template('index.html', error_message=str(e))
-
-from flask import send_file
-import pandas as pd
-from tempfile import NamedTemporaryFile
 
 @app.route('/download')
 def download_file():
