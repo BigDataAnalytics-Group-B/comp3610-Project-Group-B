@@ -3,6 +3,7 @@ import pandas as pd
 from flask import session
 from ProjectFiles.DataPreprocessing.data_cleaning import *
 import os
+from sklearn.preprocessing import StandardScaler
 
 def convert_to_years_months(total_years):
     # Separate the year into its integer and fractional components
@@ -89,29 +90,19 @@ def get_employee_anomalies():
     
     return results_list
 
-    
-    
-
-    
-from sklearn.decomposition import PCA
-from collections import Counter
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import silhouette_score 
-
 
 
 def get_employee_clusters():
+    loaded_model = load('ProjectFiles/Models/kmeans_model.joblib')
+
     filename = 'App/uploads/' + session.get('filename')
     df = load_data(filename)
 
-    # Check if uploaded file is a csv
     if filename.endswith('.csv'):
-        # Convert 'last_evaluation' column to float
         df['last_evaluation'] = df['last_evaluation'].str.rstrip('%').astype(float) / 100.0
         # df['satisfaction_level'] = df['satisfaction_level'].str.rstrip('%').astype(float) / 100.0
 
-    
+
     selected_features = ['satisfaction_level', 'last_evaluation', 'number_project',
        'average_montly_hours']
 
@@ -119,29 +110,14 @@ def get_employee_clusters():
     df_subset = df[selected_features].copy()
     # print(df_subset.dtypes)
 
-    # Scale the selected features
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(df_subset)
 
-    # Perform KMeans clustering
-    silhouette_scores = []
-    num_clusters_range = range(2, 11)
-    for num_clusters in num_clusters_range:
-        kmeans = KMeans(n_clusters=num_clusters, random_state=42, n_init=10)
-        cluster_labels = kmeans.fit_predict(scaled_features)
-        silhouette_avg = silhouette_score(scaled_features, cluster_labels)
-        silhouette_scores.append(silhouette_avg)
+    km_clusters = loaded_model.predict(scaled_features)
 
-    max_silhouette_score = max(silhouette_scores)
-    optimal_num_clusters = num_clusters_range[silhouette_scores.index(max_silhouette_score)]
-    
+    df_subset['cluster'] = km_clusters
+    # print(df_subset.head())
 
-    # Assign cluster labels to the DataFrame
-    kmeans = KMeans(n_clusters=optimal_num_clusters, init='k-means++', random_state=42, n_init=10)
-    kmeans.fit(scaled_features)
-    df_subset['cluster'] = kmeans.labels_
-
-    
 
     test_df = df_subset.copy()
     # test_df.reset_index(inplace=True)
@@ -167,13 +143,12 @@ def get_employee_clusters():
         'average_montly_hours_x': 'average_monthly_hours'
     }, inplace=True)
     
-    # Define scales for each feature separately
+    
     project_scales = define_scale(merged_df, 'number_project', None, None)
     satisfaction_scales = define_scale(merged_df, 'satisfaction_level', 0, 1)
     hours_scales = define_scale(merged_df, 'average_monthly_hours', None, None)
     evaluation_scales = define_scale(merged_df, 'last_evaluation', 0, 1)
 
-    # Combine all scales into a single dictionary
     scales = {
         'number_project': project_scales,
         'satisfaction_level': satisfaction_scales,
@@ -183,11 +158,8 @@ def get_employee_clusters():
 
     cluster_means = cluster_analysis(merged_df, 'cluster', ['satisfaction_level', 'last_evaluation', 'number_project', 'average_monthly_hours', 'left'])
 
-    # Generate insights
     insights = generate_insights(cluster_means, scales)
 
-
-    # Group the DataFrame by the 'cluster' column and count the number of rows in each group
     cluster_counts = merged_df.groupby('cluster').size().to_dict()
 
 
@@ -197,12 +169,16 @@ def get_employee_clusters():
         cluster_turnover_rate = round(cluster_turnover_rate * 100, 2)
         
 
-        insights[cluster]['count'] = count # Add the count of employees in cluster
+        insights[cluster]['count'] = count # Add count of employees in cluster
         insights[cluster]['turnover_rate'] = cluster_turnover_rate
 
     # print(insights)
 
-    return insights
+    employee_clusters = merged_df.copy()
+    employee_clusters = employee_clusters[['Emp_Id', 'cluster']]
+
+    return insights, employee_clusters
+
 
 
 def define_scale(data, feature, lower_bound, upper_bound):
@@ -225,7 +201,6 @@ def define_scale(data, feature, lower_bound, upper_bound):
 
 
 def cluster_analysis(data, cluster_column, feature_columns):
-    # Group the data by cluster and calculate the mean values of features
     cluster_means = data.groupby(cluster_column)[feature_columns].mean()
 
     return cluster_means
@@ -235,11 +210,8 @@ def cluster_analysis(data, cluster_column, feature_columns):
 def generate_insights(cluster_means, scales):
     insights = {}
 
-    
-    # Get the count of employees in each cluster
     cluster_counts = cluster_means.index.value_counts().to_dict()
 
-    # Iterate over each cluster
     for cluster, means in cluster_means.iterrows():
         cluster_insights = {}
         
@@ -254,10 +226,6 @@ def generate_insights(cluster_means, scales):
                 if scale_range[0] <= value <= scale_range[1]:
                     cluster_insights[feature] = scale_label
                     break
-        
-        # Add count of datapoints in the cluster
-        cluster_insights['count'] = cluster_counts.get(cluster, 0)
-
         
         cluster_insights['count'] = cluster_counts.get(cluster, 0)
         
